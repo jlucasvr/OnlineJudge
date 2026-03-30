@@ -21,6 +21,7 @@ export default function Layout({ children }: Props) {
                 <main className='p-10 flex space-x-10 overflow-y-auto rounded-l-[48px] bg-zinc-950'>
                     {children}
                 </main >
+
                 <footer className='min-h-18'>
                 </footer>
             </div>

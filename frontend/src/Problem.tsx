@@ -23,7 +23,7 @@ interface Props {
 
 export default function Problem({ problem }: Props) {
     return (
-        <Card className="w-3/5 ">
+        <Card className="w-4/7">
             <article className='grid grid-rows-[auto_1fr] h-full w-full font-medium'>
                 <header className='p-4 bg-zinc-950/50 text-center'>
                     <h1 className='font-bold text-4xl'>{problem.title}</h1>

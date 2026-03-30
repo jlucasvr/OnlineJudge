@@ -45,7 +45,7 @@ export default function CodeEditor() {
     }
 
     return (
-        <Card className='w-2/5'>
+        <Card className='w-3/7'>
             <div className='p-4 space-y-4 grid grid-rows-[auto_1fr_auto]'>
                 <div className="flex space-x-4 overflow-x-auto no-scrollbar">
                     {langs.map((lang) => (
@@ -66,7 +66,7 @@ export default function CodeEditor() {
                     ))}
                 </div>
 
-                <div className='rounded-2xl overflow-hidden min-h-175'>
+                <div className='rounded-2xl overflow-hidden min-h-140'>
                     <Editor
                         height="100%"
                         language={language}
