@@ -4,6 +4,9 @@
 @theme {
     --font-sans: "Inter", sans-serif;
     --font-mono: "Jetbrains Mono", monospace;
+
+    --color-laranja: var(--color-orange-600);
+    --color-roxo: var(--color-purple-600);
 }
 
 @layer utilities {
