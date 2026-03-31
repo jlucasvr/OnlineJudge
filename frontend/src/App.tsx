@@ -1,6 +1,7 @@
 import Layout from './Layout';
 import CodeEditor from './CodeEditor';
 import Problem, { type ProblemProps } from './Problem';
+import { Panel, Group, Separator } from "react-resizable-panels";
 
 export default function App() {
 
@@ -33,8 +34,11 @@ export default function App() {
 
   return (
     <Layout>
-      <Problem problem={problema} />
-      <CodeEditor />
+      <Group>
+        <Panel defaultSize="60%" minSize="30%"><Problem problem={problema} /></Panel>
+        <Separator className="w-px my-4 mx-5 bg-zinc-700/75 data-[separator='hover']:bg-zinc-500 data-[separator='active']:bg-zinc-400 outline-0" />
+        <Panel defaultSize="40%" minSize="30%"><CodeEditor /></Panel>
+      </Group>
     </Layout>
   );
 }

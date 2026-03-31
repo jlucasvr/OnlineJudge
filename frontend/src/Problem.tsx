@@ -56,8 +56,8 @@ interface Props {
 
 export default function Problem({ problem }: Props) {
     return (
-        <Card className="w-4/7">
-            <article className='grid p-4 grid-rows-[auto_1fr] h-full w-full font-medium space-y-4'>
+        <Card className='h-full'>
+            <article className='grid p-4 grid-rows-[auto_1fr] font-medium space-y-4'>
 
                 <Card className="rounded-xl">
                     <header className='p-4 bg-zinc-950/50 text-center'>
