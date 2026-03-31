@@ -1,0 +1,1 @@
+#include <stdio.h> int main(){ printf("Toma essa merda\n"); return 0; }
