@@ -33,6 +33,7 @@ export default function CodeEditor() {
     async function handleSubmit() {
         if (editorRef.current) {
             const code = editorRef.current.getValue();
+            alert(code);
 
             try {
                 const response = await fetch('http://localhost:8080/enviar', {
@@ -52,6 +53,19 @@ export default function CodeEditor() {
         }
     }
 
+    const verifyLanguageChange = () => {
+        if (!editorRef.current) return false;
+
+        const currentCode = editorRef.current.getValue();
+        const defaultCode = langs.find(lang => lang.value === language)?.code;
+
+        if (currentCode !== defaultCode) {
+            const confirm = window.confirm("Ao mudar de linguagem seu código atual será perdido.\nTem certeza que deseja fazer essa alteração?");
+            if (!confirm) return false;
+        }
+        return true;
+    }
+
     return (
         <Card className='w-3/7 p-4 space-y-4 grid grid-rows-[auto_1fr_auto]'>
             <div className="flex space-x-4">
@@ -62,7 +76,7 @@ export default function CodeEditor() {
                             name="lang"
                             value={lang.value}
                             checked={language === lang.value}
-                            onChange={(e) => setLanguage(e.target.value)}
+                            onChange={(e) => verifyLanguageChange() && setLanguage(e.target.value)}
                             className="peer hidden"
                         />
                         <div className="px-4 py-2 font-bold bg-zinc-800/10 border border-zinc-700/75 shadow-bear rounded-xl cursor-pointer
