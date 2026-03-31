@@ -1,7 +1,18 @@
 import { useRef, useState } from 'react';
 import Card from './Card';
-import { Editor, type OnMount } from '@monaco-editor/react';
-import type { editor } from 'monaco-editor';
+import { Editor, loader, type OnMount } from '@monaco-editor/react';
+import { editor } from 'monaco-editor';
+
+loader.init().then((monaco) => {
+    monaco.editor.defineTheme('meuTemaPersonalizado', {
+        base: 'vs-dark',
+        inherit: true,
+        rules: [],
+        colors: {
+            'editor.background': '#111113',
+        },
+    });
+});
 
 export default function CodeEditor() {
     const [language, setLanguage] = useState('cpp');
@@ -43,7 +54,7 @@ export default function CodeEditor() {
 
     return (
         <Card className='w-3/7 p-4 space-y-4 grid grid-rows-[auto_1fr_auto]'>
-            <div className="flex space-x-4 overflow-x-auto no-scrollbar">
+            <div className="flex space-x-4">
                 {langs.map((lang) => (
                     <label key={lang.value} className="relative">
                         <input
@@ -54,34 +65,40 @@ export default function CodeEditor() {
                             onChange={(e) => setLanguage(e.target.value)}
                             className="peer hidden"
                         />
-                        <div className="px-4 py-2 font-bold bg-zinc-800 border border-zinc-700 rounded-xl cursor-pointer
-                      peer-checked:border-laranja peer-checked:text-laranja peer-checked:bg-laranja/10 transition-all">
+                        <div className="px-4 py-2 font-bold bg-zinc-800/10 border border-zinc-700/75 shadow-bear rounded-xl cursor-pointer
+                      peer-checked:border-laranja peer-checked:text-laranja peer-checked:bg-laranja/10 hover:border-laranja hover:text-laranja hover:bg-laranja/10 transition-all duration-300">
                             {lang.label}
                         </div>
                     </label>
                 ))}
             </div>
 
-            <code className='rounded-2xl overflow-hidden min-h-[60svh]'>
-                <Editor
-                    height="100%"
-                    language={language}
-                    value={langs.find(lang => lang.value === language)?.code}
-                    theme="vs-dark"
-                    options={{
-                        minimap: { enabled: false },
-                        fontSize: 16,
-                        cursorStyle: 'line',
-                        wordWrap: 'on',
-                        fontFamily: "JetBrains Mono",
-                        fontWeight: "500",
-                        fontLigatures: "true",
-                    }}
-                    onMount={handleEditorDidMount}
-                />
-            </code>
+            <Card className='rounded-xl overflow-hidden min-h-[60svh]'>
+                <code>
+                    <Editor
+                        height="100%"
+                        language={language}
+                        value={langs.find(lang => lang.value === language)?.code}
+                        theme="meuTemaPersonalizado"
+                        options={{
+                            minimap: { enabled: false },
+                            fontSize: 16,
+                            cursorStyle: 'line',
+                            wordWrap: 'on',
+                            fontFamily: "JetBrains Mono",
+                            fontWeight: "500",
+                            fontLigatures: "true",
+                            padding: {
+                                top: 10,
+                                bottom: 10
+                            },
+                        }}
+                        onMount={handleEditorDidMount}
+                    />
+                </code>
+            </Card>
 
-            <button onClick={handleSubmit} className='py-2 px-4 bg-zinc-50 hover:bg-laranja active:scale-95 transition cursor-pointer rounded-xl text-zinc-950 font-bold justify-self-end'>Submeter</button>
+            <button onClick={handleSubmit} className='shadow-bear hover:shadow-laranja/50 py-2 px-4 bg-zinc-50 hover:bg-laranja active:scale-95 transition cursor-pointer rounded-xl text-zinc-950 font-bold justify-self-end'>Submeter</button>
         </Card>
     );
 }

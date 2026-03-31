@@ -19,6 +19,14 @@ export default function App() {
       {
         in: "10\n9\n",
         out: "X = 19"
+      },
+      {
+        in: "-10\n4\n",
+        out: "X = -6"
+      },
+      {
+        in: "15\n-7\n",
+        out: "X = 8"
       }
     ]
   }
