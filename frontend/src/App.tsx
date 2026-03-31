@@ -4,7 +4,7 @@ import Problem, { type ProblemProps } from './Problem';
 
 export default function App() {
 
-  const problem: ProblemProps = {
+  const problema: ProblemProps = {
     title: "Extremamente Básico",
     source: {
       autor: "Neilor Tonin",
@@ -25,7 +25,7 @@ export default function App() {
 
   return (
     <Layout>
-      <Problem problem={problem} />
+      <Problem problem={problema} />
       <CodeEditor />
     </Layout>
   );
