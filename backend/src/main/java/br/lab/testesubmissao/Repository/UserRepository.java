@@ -1,11 +1,11 @@
 package br.lab.testesubmissao.Repository;
 
-import br.lab.testesubmissao.Entity.Submission;
-
 import java.util.UUID;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface SubmissionRepository extends JpaRepository<Submission, UUID> {
+import br.lab.testesubmissao.Entity.User;
 
-}
+public interface UserRepository extends JpaRepository<User, UUID>{}
+
+  

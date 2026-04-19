@@ -1,7 +1,7 @@
 package br.lab.testesubmissao.Entity;
 
 import jakarta.persistence.*;
-import org.hibernate.annotations.CollectionIdJavaType;
+
 import org.hibernate.annotations.UuidGenerator;
 
 import java.time.LocalDateTime;
@@ -40,4 +40,9 @@ public class Problem {
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
+
+    public UUID getId() {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'getId'");
+    }
 }

@@ -1,30 +1,51 @@
 package br.lab.testesubmissao.Entity;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
-
 import java.io.Serializable;
+import java.util.Objects;
 import java.util.UUID;
 
-@Entity
-@Table
+import jakarta.persistence.Embeddable;
+
+@Embeddable
 public class ProblemTagId implements Serializable {
 
-    @Id
-    private Long id;
-    private UUID problem;
-    private UUID tag;
+    private UUID problemId;
+    private UUID tagId;
 
+    public ProblemTagId() {}
 
-    public Long getId() {
-        return id;
+    public ProblemTagId(UUID problemId, UUID tagId) {
+        this.problemId = problemId;
+        this.tagId = tagId;
     }
 
-    public void setId(Long id) {
-        this.id = id;
+    public UUID getProblemId() {
+        return problemId;
     }
 
+    public void setProblemId(UUID problemId) {
+        this.problemId = problemId;
+    }
 
-    // equals e hashCode
+    public UUID getTagId() {
+        return tagId;
+    }
+
+    public void setTagId(UUID tagId) {
+        this.tagId = tagId;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        ProblemTagId that = (ProblemTagId) o;
+        return Objects.equals(problemId, that.problemId) &&
+               Objects.equals(tagId, that.tagId);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(problemId, tagId);
+    }
 }
