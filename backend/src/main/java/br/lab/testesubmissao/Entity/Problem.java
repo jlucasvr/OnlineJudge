@@ -1,7 +1,6 @@
 package br.lab.testesubmissao.Entity;
 
 import jakarta.persistence.*;
-
 import org.hibernate.annotations.UuidGenerator;
 
 import java.time.LocalDateTime;
@@ -41,8 +40,76 @@ public class Problem {
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
 
+    // ✅ CORRIGIDO: getId() estava lançando UnsupportedOperationException
     public UUID getId() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getId'");
+        return id;
+    }
+
+    public void setId(UUID id) {
+        this.id = id;
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
+    }
+
+    public String getStatement() {
+        return statement;
+    }
+
+    public void setStatement(String statement) {
+        this.statement = statement;
+    }
+
+    public String getDifficulty() {
+        return difficulty;
+    }
+
+    public void setDifficulty(String difficulty) {
+        this.difficulty = difficulty;
+    }
+
+    public Integer getTimeLimitMs() {
+        return timeLimitMs;
+    }
+
+    public void setTimeLimitMs(Integer timeLimitMs) {
+        this.timeLimitMs = timeLimitMs;
+    }
+
+    public Integer getMemoryLimitKb() {
+        return memoryLimitKb;
+    }
+
+    public void setMemoryLimitKb(Integer memoryLimitKb) {
+        this.memoryLimitKb = memoryLimitKb;
+    }
+
+    public Boolean getIsPublic() {
+        return isPublic;
+    }
+
+    public void setIsPublic(Boolean isPublic) {
+        this.isPublic = isPublic;
+    }
+
+    public User getAuthor() {
+        return author;
+    }
+
+    public void setAuthor(User author) {
+        this.author = author;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
     }
 }

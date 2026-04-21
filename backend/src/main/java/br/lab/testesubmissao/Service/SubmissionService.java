@@ -1,81 +1,104 @@
 package br.lab.testesubmissao.Service;
 
+import br.lab.testesubmissao.Entity.Problem;
 import br.lab.testesubmissao.Entity.Submission;
+import br.lab.testesubmissao.Entity.User;
 import br.lab.testesubmissao.Repository.SubmissionRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.Map;
+import java.util.List;
+import java.util.UUID;
 
+/**
+ * ✅ REESCRITO: limpo, sem lógica de compilação embutida (isso vai para o Worker).
+ *
+ * Responsabilidade desta service:
+ * - Criar/salvar registros de submissão no banco
+ * - Consultar submissões por usuário/problema
+ * - Atualizar status/resultado (chamado pelo Worker via fila futuramente)
+ * - Deletar submissões
+ *
+ * A lógica de compilação e execução NÃO fica aqui — fica no módulo Worker,
+ * que consumirá mensagens da fila (RabbitMQ) com o submissionId.
+ */
 @Service
 public class SubmissionService {
-    @Autowired
-    private SubmissionRepository submissionRepository;
 
-    public void create(Submission submission){
-        submission.setSaida(null);
-        submission.setStatus("Pendente");
-        this.submissionRepository.save(submission);
+    private final SubmissionRepository submissionRepository;
+
+    public SubmissionService(SubmissionRepository submissionRepository) {
+        this.submissionRepository = submissionRepository;
     }
 
-    public Submission buscarPorId(Long id) {
+    /**
+     * Cria uma nova submissão com status "pending".
+     * O Worker será responsável por processar e atualizar o status.
+     */
+    public Submission create(Submission submission) {
+        submission.setStatus("pending");
+        return submissionRepository.save(submission);
+    }
+
+    /**
+     * Busca submissão por ID. Lança exceção se não encontrada.
+     */
+    public Submission findById(UUID id) {
         return submissionRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Submissão não encontrada"));
+                .orElseThrow(() -> new RuntimeException("Submissão não encontrada: " + id));
     }
 
-    public Map<String, String> Processar(Map<String, String> dados){
-        Submission submission = new Submission();
-        submission.setCodigo(dados.get("code"));
-        submission.setLinguagem(dados.get("lang"));
-        submission.setStatus("pendente");
-        submissionRepository.save(submission);
+    /**
+     * Lista todas as submissões de um usuário, mais recentes primeiro.
+     */
+    public List<Submission> findByUser(User user) {
+        return submissionRepository.findByUserOrderBySubmittedAtDesc(user);
+    }
 
-        Submission salva = submissionRepository.findById(submission.getId())
-                .orElseThrow(() -> new RuntimeException("Submissão não encontrada"));
+    /**
+     * Lista submissões de um usuário em um problema específico.
+     */
+    public List<Submission> findByUserAndProblem(User user, Problem problem) {
+        return submissionRepository.findByUserAndProblemOrderBySubmittedAtDesc(user, problem);
+    }
 
-        String BASE = System.getProperty("user.dir");
-        String cppPath = BASE + "/arquivo.c";
-        String exePath = BASE + "/programa";
+    /**
+     * Lista todas as submissões de um problema (admin/estatísticas).
+     */
+    public List<Submission> findByProblem(Problem problem) {
+        return submissionRepository.findByProblemOrderBySubmittedAtDesc(problem);
+    }
 
-        try {
-            Files.writeString(Paths.get(cppPath), salva.getCodigo());
-            ProcessBuilder compile = new ProcessBuilder("gcc", cppPath, "-o", exePath);
-            compile.redirectErrorStream(true);
-            Process compileProcess = compile.start();
-            String compileOutput = new String(compileProcess.getInputStream().readAllBytes());
-            int compileCode = compileProcess.waitFor();
+    /**
+     * Busca submissões por status (ex: "pending" para o Worker processar).
+     */
+    public List<Submission> findByStatus(String status) {
+        return submissionRepository.findByStatus(status);
+    }
 
-            if(compileCode != 0){
-                salva.setSaida(compileOutput);
-                salva.setStatus("error");
-                submissionRepository.save(salva);
-                return Map.of("status", "error", "resultado", compileOutput);
-            }
+    /**
+     * Atualiza o status de uma submissão.
+     * Chamado pelo Worker após processar (ex: "accepted", "wrong_answer", "time_limit_exceeded").
+     */
+    public Submission updateStatus(UUID id, String newStatus, Integer executionTimeMs, Integer memoryUsedKb) {
+        Submission submission = findById(id);
+        submission.setStatus(newStatus);
+        if (executionTimeMs != null) submission.setExecutionTimeMs(executionTimeMs);
+        if (memoryUsedKb != null) submission.setMemoryUsedKb(memoryUsedKb);
+        return submissionRepository.save(submission);
+    }
 
-            ProcessBuilder run = new ProcessBuilder(exePath);
-            Process runProcess = run.start();
-            String result = new String(runProcess.getInputStream().readAllBytes());
-            runProcess.waitFor();
+    /**
+     * Verifica se o usuário já resolveu o problema (tem alguma submissão "accepted").
+     */
+    public boolean userSolvedProblem(User user, Problem problem) {
+        return submissionRepository.countByUserAndProblemAndStatus(user, problem, "accepted") > 0;
+    }
 
-
-
-            salva.setSaida(result);
-            if(salva.getSaida().equals("Hello world\n")){
-
-            }
-
-            salva.setStatus("concluido");
-            submissionRepository.save(salva);
-
-            return Map.of("status", "ok", "resultado", result);
-
-        } catch (Exception e) {
-            salva.setStatus("erro");
-            salva.setSaida(e.getMessage());
-            submissionRepository.save(salva);
-            return Map.of("status", "erro", "resultado", e.getMessage());
-        }
+    /**
+     * Remove uma submissão pelo ID.
+     */
+    public void delete(UUID id) {
+        Submission existing = findById(id);
+        submissionRepository.delete(existing);
     }
 }

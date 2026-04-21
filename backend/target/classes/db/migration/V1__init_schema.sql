@@ -86,7 +86,7 @@ CREATE TABLE verdict (
                          id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
                          submission_id UUID NOT NULL,
                          test_case_id UUID NOT NULL,
-                         result VARCHAR(10) NOT NULL,
+                         result VARCHAR(30) NOT NULL,
                          execution_time_ms INT,
                          memory_used_kb INT,
                          checker_output TEXT,

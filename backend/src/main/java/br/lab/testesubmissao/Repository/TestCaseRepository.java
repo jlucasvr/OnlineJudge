@@ -1,11 +1,24 @@
 package br.lab.testesubmissao.Repository;
 
+import br.lab.testesubmissao.Entity.Problem;
+import br.lab.testesubmissao.Entity.TestCase;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 import java.util.UUID;
 
-import org.springframework.data.jpa.repository.JpaRepository;
+public interface TestCaseRepository extends JpaRepository<TestCase, UUID> {
 
-import br.lab.testesubmissao.Entity.TestCase;
+    List<TestCase> findByProblemOrderByOrderIndex(Problem problem);
 
-public interface TestCaseRepository extends JpaRepository<TestCase, UUID>{
-    
+    List<TestCase> findByProblemAndIsSampleTrue(Problem problem);
+
+    List<TestCase> findByProblemAndIsSampleFalse(Problem problem);
+
+    // ✅ CORRIGIDO: @Transactional + @Modifying obrigatório para delete derivado
+    @Transactional
+    @Modifying
+    void deleteByProblem(Problem problem);
 }
