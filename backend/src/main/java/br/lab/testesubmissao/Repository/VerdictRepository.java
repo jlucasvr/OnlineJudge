@@ -10,9 +10,7 @@ import java.util.UUID;
 
 public interface VerdictRepository extends JpaRepository<Verdict, UUID> {
 
-    // ✅ NOVO: todos os veredictos de uma submissão
     List<Verdict> findBySubmission(Submission submission);
 
-    // ✅ NOVO: veredicto de uma submissão em um caso de teste específico
     List<Verdict> findBySubmissionAndTestCase(Submission submission, TestCase testCase);
 }

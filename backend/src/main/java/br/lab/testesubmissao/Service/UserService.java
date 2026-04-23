@@ -1,6 +1,8 @@
 package br.lab.testesubmissao.Service;
 
+import br.lab.testesubmissao.Entity.Role;
 import br.lab.testesubmissao.Entity.User;
+import br.lab.testesubmissao.Exception.ResourceNotFoundException;
 import br.lab.testesubmissao.Repository.UserRepository;
 import org.springframework.stereotype.Service;
 
@@ -17,22 +19,19 @@ public class UserService {
         this.userRepository = userRepository;
     }
 
-    /**
-     * Registra um novo usuário.
-     * ⚠️  ATENÇÃO: Por enquanto salva a senha em texto puro.
-     *     Quando Spring Security for adicionado, substituir por:
-     *     user.setPasswordHash(passwordEncoder.encode(rawPassword));
-     */
     public User register(User user) {
         if (userRepository.existsByUsername(user.getUsername())) {
             throw new IllegalArgumentException("Username '" + user.getUsername() + "' já está em uso.");
         }
+
         if (userRepository.existsByEmail(user.getEmail())) {
             throw new IllegalArgumentException("Email '" + user.getEmail() + "' já está cadastrado.");
         }
-        if (user.getRole() == null || user.getRole().isBlank()) {
-            user.setRole("contestant");
+
+        if (user.getRole() == null) {
+            user.setRole(Role.ROLE_USER);
         }
+
         user.setCreatedAt(LocalDateTime.now());
         return userRepository.save(user);
     }
@@ -42,7 +41,7 @@ public class UserService {
      */
     public User findById(UUID id) {
         return userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Usuário não encontrado: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado: " + id));
     }
 
     /**
@@ -50,7 +49,7 @@ public class UserService {
      */
     public User findByUsername(String username) {
         return userRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("Usuário não encontrado: " + username));
+                .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado: " + username));
     }
 
     /**

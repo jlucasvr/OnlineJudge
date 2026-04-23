@@ -1,6 +1,7 @@
 package br.lab.testesubmissao.Service;
 
 import br.lab.testesubmissao.Entity.Tag;
+import br.lab.testesubmissao.Exception.ResourceNotFoundException;
 import br.lab.testesubmissao.Repository.TagRepository;
 import org.springframework.stereotype.Service;
 
@@ -43,7 +44,7 @@ public class TagService {
      */
     public Tag findById(UUID id) {
         return tagRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Tag não encontrada: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Tag não encontrada: " + id));
     }
 
     /**
@@ -51,7 +52,7 @@ public class TagService {
      */
     public Tag findByName(String name) {
         return tagRepository.findByName(name)
-                .orElseThrow(() -> new RuntimeException("Tag não encontrada: " + name));
+                .orElseThrow(() -> new ResourceNotFoundException("Tag não encontrada: " + name));
     }
 
     /**

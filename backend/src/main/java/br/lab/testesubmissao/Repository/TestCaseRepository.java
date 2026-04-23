@@ -17,7 +17,7 @@ public interface TestCaseRepository extends JpaRepository<TestCase, UUID> {
 
     List<TestCase> findByProblemAndIsSampleFalse(Problem problem);
 
-    // ✅ CORRIGIDO: @Transactional + @Modifying obrigatório para delete derivado
+
     @Transactional
     @Modifying
     void deleteByProblem(Problem problem);

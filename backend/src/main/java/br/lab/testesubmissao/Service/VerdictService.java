@@ -3,6 +3,7 @@ package br.lab.testesubmissao.Service;
 import br.lab.testesubmissao.Entity.Submission;
 import br.lab.testesubmissao.Entity.TestCase;
 import br.lab.testesubmissao.Entity.Verdict;
+import br.lab.testesubmissao.Exception.ResourceNotFoundException;
 import br.lab.testesubmissao.Repository.VerdictRepository;
 import org.springframework.stereotype.Service;
 
@@ -31,7 +32,7 @@ public class VerdictService {
      */
     public Verdict findById(UUID id) {
         return verdictRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Veredicto não encontrado: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Veredicto não encontrado: " + id));
     }
 
     /**

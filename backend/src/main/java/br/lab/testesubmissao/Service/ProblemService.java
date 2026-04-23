@@ -1,20 +1,29 @@
 package br.lab.testesubmissao.Service;
 
+import br.lab.testesubmissao.Entity.Difficulty;
 import br.lab.testesubmissao.Entity.Problem;
+import br.lab.testesubmissao.Entity.TestCase;
 import br.lab.testesubmissao.Entity.User;
+import br.lab.testesubmissao.Exception.ResourceNotFoundException;
 import br.lab.testesubmissao.Repository.ProblemRepository;
+import br.lab.testesubmissao.Repository.TestCaseRepository;
+import jakarta.transaction.Transactional;
+
 import org.springframework.stereotype.Service;
 
+import java.util.Dictionary;
 import java.util.List;
 import java.util.UUID;
 
 @Service
 public class ProblemService {
 
+    private final TestCaseRepository testCaseRepository;
     private final ProblemRepository problemRepository;
 
-    public ProblemService(ProblemRepository problemRepository) {
+    public ProblemService(ProblemRepository problemRepository, TestCaseRepository testCaseRepository) {
         this.problemRepository = problemRepository;
+        this.testCaseRepository = testCaseRepository;
     }
 
     /**
@@ -30,7 +39,7 @@ public class ProblemService {
      */
     public Problem findById(UUID id) {
         return problemRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Problema não encontrado: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Problema não encontrado: " + id));
     }
 
     /**
@@ -59,8 +68,10 @@ public class ProblemService {
     /**
      * Remove um problema pelo ID.
      */
+    @Transactional
     public void delete(UUID id) {
         Problem existing = findById(id);
+        testCaseRepository.deleteByProblem(existing);
         problemRepository.delete(existing);
     }
 
@@ -81,14 +92,14 @@ public class ProblemService {
     /**
      * Filtra problemas por dificuldade.
      */
-    public List<Problem> findByDifficulty(String difficulty) {
+    public List<Problem> findByDifficulty(Difficulty difficulty) {
         return problemRepository.findByDifficulty(difficulty);
     }
 
     /**
      * Filtra problemas públicos por dificuldade.
      */
-    public List<Problem> findPublicByDifficulty(String difficulty) {
+    public List<Problem> findPublicByDifficulty(Difficulty difficulty) {
         return problemRepository.findByIsPublicTrueAndDifficulty(difficulty);
     }
 

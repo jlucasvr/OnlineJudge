@@ -16,9 +16,6 @@ public interface ProblemTagRepository extends JpaRepository<ProblemTag, ProblemT
 
     List<ProblemTag> findByTag(Tag tag);
 
-    // ✅ CORRIGIDO: métodos delete derivados no Spring Data precisam de
-    //    @Transactional + @Modifying para funcionar corretamente.
-    //    Sem isso: "No transaction in progress" ou operação silenciosa.
     @Transactional
     @Modifying
     void deleteByProblem(Problem problem);

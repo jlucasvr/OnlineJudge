@@ -2,6 +2,7 @@ package br.lab.testesubmissao.Service;
 
 import br.lab.testesubmissao.Entity.Problem;
 import br.lab.testesubmissao.Entity.TestCase;
+import br.lab.testesubmissao.Exception.ResourceNotFoundException;
 import br.lab.testesubmissao.Repository.TestCaseRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,7 +31,7 @@ public class TestCaseService {
      */
     public TestCase findById(UUID id) {
         return testCaseRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Caso de teste não encontrado: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Caso de teste não encontrado: " + id));
     }
 
     /**

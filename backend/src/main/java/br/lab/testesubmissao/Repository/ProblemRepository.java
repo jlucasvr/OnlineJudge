@@ -3,6 +3,7 @@
 // ============================================================
 package br.lab.testesubmissao.Repository;
 
+import br.lab.testesubmissao.Entity.Difficulty;
 import br.lab.testesubmissao.Entity.Problem;
 import br.lab.testesubmissao.Entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -15,13 +16,13 @@ import java.util.UUID;
 public interface ProblemRepository extends JpaRepository<Problem, UUID> {
 
     // Já existia
-    List<Problem> findByDifficulty(String difficulty);
+    List<Problem> findByDifficulty(Difficulty difficulty);
 
     // ✅ NOVO: buscar apenas problemas públicos (para listagem sem auth)
     List<Problem> findByIsPublicTrue();
 
     // ✅ NOVO: buscar problemas públicos por dificuldade
-    List<Problem> findByIsPublicTrueAndDifficulty(String difficulty);
+    List<Problem> findByIsPublicTrueAndDifficulty(Difficulty difficulty);
 
     // ✅ NOVO: buscar problemas de um autor específico
     List<Problem> findByAuthor(User author);

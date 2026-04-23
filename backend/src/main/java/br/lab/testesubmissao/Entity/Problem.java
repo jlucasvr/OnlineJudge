@@ -21,8 +21,9 @@ public class Problem {
     @Column(nullable = false, columnDefinition = "TEXT")
     private String statement;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private String difficulty;
+    private Difficulty difficulty;
 
     @Column(name = "time_limit_ms", nullable = false)
     private Integer timeLimitMs;
@@ -65,11 +66,12 @@ public class Problem {
         this.statement = statement;
     }
 
-    public String getDifficulty() {
+
+    public Difficulty getDifficulty() {
         return difficulty;
     }
 
-    public void setDifficulty(String difficulty) {
+    public void setDifficulty(Difficulty difficulty) {
         this.difficulty = difficulty;
     }
 

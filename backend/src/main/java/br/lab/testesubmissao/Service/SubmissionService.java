@@ -2,7 +2,9 @@ package br.lab.testesubmissao.Service;
 
 import br.lab.testesubmissao.Entity.Problem;
 import br.lab.testesubmissao.Entity.Submission;
+import br.lab.testesubmissao.Entity.SubmissionStatus;
 import br.lab.testesubmissao.Entity.User;
+import br.lab.testesubmissao.Exception.ResourceNotFoundException;
 import br.lab.testesubmissao.Repository.SubmissionRepository;
 import org.springframework.stereotype.Service;
 
@@ -31,11 +33,11 @@ public class SubmissionService {
     }
 
     /**
-     * Cria uma nova submissão com status "pending".
+     * Cria uma nova submissão com status PENDING.
      * O Worker será responsável por processar e atualizar o status.
      */
     public Submission create(Submission submission) {
-        submission.setStatus("pending");
+        submission.setStatus(SubmissionStatus.PENDING);
         return submissionRepository.save(submission);
     }
 
@@ -44,7 +46,7 @@ public class SubmissionService {
      */
     public Submission findById(UUID id) {
         return submissionRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Submissão não encontrada: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Submissão não encontrada: " + id));
     }
 
     /**
@@ -69,17 +71,16 @@ public class SubmissionService {
     }
 
     /**
-     * Busca submissões por status (ex: "pending" para o Worker processar).
+     * Busca submissões por status (ex: PENDING para o Worker processar).
      */
-    public List<Submission> findByStatus(String status) {
+    public List<Submission> findByStatus(SubmissionStatus status) {
         return submissionRepository.findByStatus(status);
     }
 
     /**
-     * Atualiza o status de uma submissão.
-     * Chamado pelo Worker após processar (ex: "accepted", "wrong_answer", "time_limit_exceeded").
+     * Atualiza o status de uma submissão. Chamado pelo Worker após processar.
      */
-    public Submission updateStatus(UUID id, String newStatus, Integer executionTimeMs, Integer memoryUsedKb) {
+    public Submission updateStatus(UUID id, SubmissionStatus newStatus, Integer executionTimeMs, Integer memoryUsedKb) {
         Submission submission = findById(id);
         submission.setStatus(newStatus);
         if (executionTimeMs != null) submission.setExecutionTimeMs(executionTimeMs);
@@ -88,10 +89,10 @@ public class SubmissionService {
     }
 
     /**
-     * Verifica se o usuário já resolveu o problema (tem alguma submissão "accepted").
+     * Verifica se o usuário já resolveu o problema (tem alguma submissão ACCEPTED).
      */
     public boolean userSolvedProblem(User user, Problem problem) {
-        return submissionRepository.countByUserAndProblemAndStatus(user, problem, "accepted") > 0;
+        return submissionRepository.countByUserAndProblemAndStatus(user, problem, SubmissionStatus.ACCEPTED) > 0;
     }
 
     /**

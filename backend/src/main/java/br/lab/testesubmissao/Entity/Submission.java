@@ -30,8 +30,9 @@ public class Submission {
     @Column(name = "code_path", nullable = false)
     private String codePath;
 
-    @Column(nullable = false)
-    private String status = "pending";
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private SubmissionStatus status = SubmissionStatus.PENDING;
 
     @Column(name = "execution_time_ms")
     private Integer executionTimeMs;
@@ -82,11 +83,11 @@ public class Submission {
         this.codePath = codePath;
     }
 
-    public String getStatus() {
+    public SubmissionStatus getStatus() {
         return status;
     }
 
-    public void setStatus(String status) {
+    public void setStatus(SubmissionStatus status) {
         this.status = status;
     }
 
@@ -114,7 +115,7 @@ public class Submission {
         this.submittedAt = submittedAt;
     }
 
-    public Submission(UUID id, User user, Problem problem, String language, String codePath, String status,
+    public Submission(UUID id, User user, Problem problem, String language, String codePath, SubmissionStatus status,
             Integer executionTimeMs, Integer memoryUsedKb, LocalDateTime submittedAt) {
         this.id = id;
         this.user = user;

@@ -31,8 +31,9 @@ public class User {
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
-    private String role = "contestant";
+    private Role role = Role.ROLE_USER;
 
     public UUID getId() {
         return id;
@@ -74,17 +75,17 @@ public class User {
         this.createdAt = createdAt;
     }
 
-    public String getRole() {
+    public Role getRole() {
         return role;
     }
 
-    public void setRole(String role) {
+    public void setRole(Role role) {
         this.role = role;
     }
 
     public User() {}
 
-    public User(UUID id, String username, String email, String passwordHash, LocalDateTime createdAt, String role) {
+    public User(UUID id, String username, String email, String passwordHash, LocalDateTime createdAt, Role role) {
         this.id = id;
         this.username = username;
         this.email = email;
