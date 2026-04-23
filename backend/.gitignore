@@ -1,0 +1,74 @@
+
+# VARIÁVEIS DE AMBIENTE E SENHA DO BANCO
+
+.env
+.env.*
+!.env.example
+application-local.properties
+application-local.yml
+secrets.properties
+
+
+# MAVEN
+
+target/
+!.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+.mvn/timing.properties
+
+
+# SPRING BOOT — RUNTIME
+
+storage/
+logs/
+*.log
+*.log.*
+
+
+# BINÁRIOS E ARQUIVOS COMPILADOS
+
+*.class
+*.jar
+*.war
+*.ear
+*.nar
+*.out
+*.exe
+*.o
+*.a
+*.so
+*.dylib
+programa
+arquivo.c
+arquivo.cpp
+
+# IDEs
+
+
+# IntelliJ IDEA
+.idea/
+*.iml
+*.iws
+*.ipr
+out/
+
+# VS Code
+.vscode/
+!.vscode/extensions.json
+
+# Eclipse
+.classpath
+.project
+.settings/
+bin/
+
+
+# SISTEMA OPERACIONAL
+
+.DS_Store
+Thumbs.db
+desktop.ini
+*~
+*.swp
+*.tmp
