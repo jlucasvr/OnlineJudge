@@ -11,7 +11,9 @@ public record TestCaseResponse(
         String inputPath,
         String outputPath,
         Integer points,
-        Boolean isSample
+        Boolean isSample,
+        Integer timeLimitMs,
+        Integer memoryLimitKb
 ) {
     public static TestCaseResponse fromEntity(TestCase tc) {
         return new TestCaseResponse(
@@ -21,7 +23,9 @@ public record TestCaseResponse(
                 tc.getInputPath(),
                 tc.getOutputPath(),
                 tc.getPoints(),
-                tc.getIsSample()
+                tc.getIsSample(),
+                tc.getProblem().getTimeLimitMs(),
+                tc.getProblem().getMemoryLimitKb()
         );
     }
 }

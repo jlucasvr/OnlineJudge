@@ -37,6 +37,14 @@ public class Verdict {
     @Column(name = "checker_output", columnDefinition = "TEXT")
     private String checkerOutput;
 
+    /**
+     * Saída real gerada pelo programa do usuário.
+     * Só é preenchida quando o test case tem is_sample = true.
+     * Truncada em 4096 chars se necessário.
+     */
+    @Column(name = "actual_output", columnDefinition = "TEXT")
+    private String actualOutput;
+
     public UUID getId() { return id; }
     public void setId(UUID id) { this.id = id; }
 
@@ -57,4 +65,7 @@ public class Verdict {
 
     public String getCheckerOutput() { return checkerOutput; }
     public void setCheckerOutput(String checkerOutput) { this.checkerOutput = checkerOutput; }
+
+    public String getActualOutput() { return actualOutput; }
+    public void setActualOutput(String actualOutput) { this.actualOutput = actualOutput; }
 }

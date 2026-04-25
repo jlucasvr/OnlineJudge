@@ -27,9 +27,12 @@ import java.util.UUID;
 public class SubmissionService {
 
     private final SubmissionRepository submissionRepository;
+    private final VerdictService verdictService;
 
-    public SubmissionService(SubmissionRepository submissionRepository) {
+    public SubmissionService(SubmissionRepository submissionRepository,
+                             VerdictService verdictService) {
         this.submissionRepository = submissionRepository;
+        this.verdictService = verdictService;
     }
 
     /**
@@ -100,6 +103,7 @@ public class SubmissionService {
      */
     public void delete(UUID id) {
         Submission existing = findById(id);
+        verdictService.deleteBySubmission(existing);
         submissionRepository.delete(existing);
     }
 }

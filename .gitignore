@@ -1,0 +1,61 @@
+# IDEs e arquivos locais
+.idea/
+.vscode/
+!.vscode/extensions.json
+*.iml
+*.iws
+*.ipr
+
+# Sistema operacional
+.DS_Store
+Thumbs.db
+desktop.ini
+*~
+*.swp
+*.tmp
+
+# Variaveis de ambiente e segredos locais
+.env
+.env.*
+!.env.example
+application-local.properties
+application-local.yml
+secrets.properties
+
+# Dados/runtime local do juiz
+.oj-data/
+storage/
+logs/
+*.log
+*.log.*
+
+# Java / Spring Boot
+target/
+*.class
+*.jar
+*.war
+*.ear
+*.nar
+*.out
+*.exe
+*.o
+*.a
+*.so
+*.dylib
+
+# Node / frontend
+node_modules/
+dist/
+dist-ssr/
+build/
+*.local
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Arquivos de execucao/compilacao manual
+programa
+arquivo.c
+arquivo.cpp

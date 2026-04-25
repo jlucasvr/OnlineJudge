@@ -3,11 +3,13 @@ package br.lab.testesubmissao.Controller;
 import br.lab.testesubmissao.Dto.tag.CreateTagRequest;
 import br.lab.testesubmissao.Dto.tag.TagResponse;
 import br.lab.testesubmissao.Entity.Tag;
+import br.lab.testesubmissao.Service.AuditLogService;
 import br.lab.testesubmissao.Service.TagService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -27,9 +29,11 @@ import java.util.UUID;
 public class TagController {
 
     private final TagService tagService;
+    private final AuditLogService auditLogService;
 
-    public TagController(TagService tagService) {
+    public TagController(TagService tagService, AuditLogService auditLogService) {
         this.tagService = tagService;
+        this.auditLogService = auditLogService;
     }
 
     // -------------------------------------------------------------------------
@@ -56,11 +60,13 @@ public class TagController {
     // -------------------------------------------------------------------------
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<TagResponse> create(@Valid @RequestBody CreateTagRequest request) {
+    public ResponseEntity<TagResponse> create(@Valid @RequestBody CreateTagRequest request, Authentication authentication) {
         Tag tag = new Tag();
         tag.setName(request.name());
 
         Tag saved = tagService.create(tag);
+        auditLogService.logAdminAction(authentication.getName(), "tag_created", "tag", saved.getId().toString(),
+                "name=" + saved.getName());
         return ResponseEntity.status(HttpStatus.CREATED).body(TagResponse.fromEntity(saved));
     }
 
@@ -69,8 +75,9 @@ public class TagController {
     // -------------------------------------------------------------------------
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Void> delete(@PathVariable UUID id) {
+    public ResponseEntity<Void> delete(@PathVariable UUID id, Authentication authentication) {
         tagService.delete(id);
+        auditLogService.logAdminAction(authentication.getName(), "tag_deleted", "tag", id.toString(), "manual_delete");
         return ResponseEntity.noContent().build();
     }
 }

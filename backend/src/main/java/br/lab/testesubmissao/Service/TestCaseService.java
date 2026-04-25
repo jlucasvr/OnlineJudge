@@ -14,9 +14,12 @@ import java.util.UUID;
 public class TestCaseService {
 
     private final TestCaseRepository testCaseRepository;
+    private final VerdictService verdictService;
 
-    public TestCaseService(TestCaseRepository testCaseRepository) {
+    public TestCaseService(TestCaseRepository testCaseRepository,
+                           VerdictService verdictService) {
         this.testCaseRepository = testCaseRepository;
+        this.verdictService = verdictService;
     }
 
     /**
@@ -73,6 +76,7 @@ public class TestCaseService {
      */
     public void delete(UUID id) {
         TestCase existing = findById(id);
+        verdictService.deleteByTestCase(existing);
         testCaseRepository.delete(existing);
     }
 

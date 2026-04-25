@@ -8,8 +8,9 @@ import br.lab.testesubmissao.Entity.Submission;
 import br.lab.testesubmissao.Entity.SubmissionStatus;
 import br.lab.testesubmissao.Entity.User;
 import br.lab.testesubmissao.Service.ProblemService;
-import br.lab.testesubmissao.Service.SubmissionCodeStorageService;
+import br.lab.testesubmissao.Service.AuditLogService;
 import br.lab.testesubmissao.Service.SubmissionService;
+import br.lab.testesubmissao.Service.SubmissionWorkflowService;
 import br.lab.testesubmissao.Service.UserService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -20,7 +21,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Locale;
 import java.util.UUID;
 
 /**
@@ -39,19 +39,21 @@ import java.util.UUID;
 public class SubmissionController {
 
     private final SubmissionService submissionService;
-    private final SubmissionCodeStorageService submissionCodeStorageService;
+    private final SubmissionWorkflowService submissionWorkflowService;
     private final UserService userService;
     private final ProblemService problemService;
+    private final AuditLogService auditLogService;
 
-    // ✅ Injeção via construtor (sem @Autowired — é a prática recomendada pelo Spring)
     public SubmissionController(SubmissionService submissionService,
-                                 SubmissionCodeStorageService submissionCodeStorageService,
+                                 SubmissionWorkflowService submissionWorkflowService,
                                  UserService userService,
-                                 ProblemService problemService) {
+                                 ProblemService problemService,
+                                 AuditLogService auditLogService) {
         this.submissionService = submissionService;
-        this.submissionCodeStorageService = submissionCodeStorageService;
+        this.submissionWorkflowService = submissionWorkflowService;
         this.userService = userService;
         this.problemService = problemService;
+        this.auditLogService = auditLogService;
     }
 
     /**
@@ -71,14 +73,12 @@ public class SubmissionController {
         User user = userService.findByUsername(authentication.getName());
         Problem problem = problemService.findById(request.problemId());
 
-        Submission submission = new Submission();
-        submission.setUser(user);
-        submission.setProblem(problem);
-        String normalizedLanguage = request.language().toLowerCase(Locale.ROOT);
-        submission.setLanguage(normalizedLanguage);
-        submission.setCodePath(submissionCodeStorageService.store(normalizedLanguage, request.sourceCode()));
-
-        Submission saved = submissionService.create(submission);
+        Submission saved = submissionWorkflowService.createAndDispatch(
+                user,
+                problem,
+                request.language(),
+                request.sourceCode()
+        );
         return ResponseEntity.status(HttpStatus.CREATED).body(SubmissionResponse.fromEntity(saved));
     }
 
@@ -137,10 +137,13 @@ public class SubmissionController {
     @PatchMapping("/{id}/status")
     public ResponseEntity<SubmissionResponse> updateStatus(
             @PathVariable UUID id,
-            @Valid @RequestBody UpdateSubmissionStatusRequest request
+            @Valid @RequestBody UpdateSubmissionStatusRequest request,
+            Authentication authentication
     ) {
         Submission updated = submissionService.updateStatus(
                 id, request.status(), request.executionTimeMs(), request.memoryUsedKb());
+        auditLogService.logAdminAction(authentication.getName(), "submission_status_updated", "submission", id.toString(),
+                "status=" + request.status());
         return ResponseEntity.ok(SubmissionResponse.fromEntity(updated));
     }
 
@@ -148,8 +151,9 @@ public class SubmissionController {
      * Remove uma submissão.
      */
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable UUID id) {
+    public ResponseEntity<Void> delete(@PathVariable UUID id, Authentication authentication) {
         submissionService.delete(id);
+        auditLogService.logAdminAction(authentication.getName(), "submission_deleted", "submission", id.toString(), "manual_delete");
         return ResponseEntity.noContent().build();
     }
 }

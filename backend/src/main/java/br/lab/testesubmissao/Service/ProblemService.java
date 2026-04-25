@@ -2,7 +2,6 @@ package br.lab.testesubmissao.Service;
 
 import br.lab.testesubmissao.Entity.Difficulty;
 import br.lab.testesubmissao.Entity.Problem;
-import br.lab.testesubmissao.Entity.TestCase;
 import br.lab.testesubmissao.Entity.User;
 import br.lab.testesubmissao.Exception.ResourceNotFoundException;
 import br.lab.testesubmissao.Repository.ProblemRepository;
@@ -11,7 +10,6 @@ import jakarta.transaction.Transactional;
 
 import org.springframework.stereotype.Service;
 
-import java.util.Dictionary;
 import java.util.List;
 import java.util.UUID;
 
@@ -20,33 +18,27 @@ public class ProblemService {
 
     private final TestCaseRepository testCaseRepository;
     private final ProblemRepository problemRepository;
+    private final VerdictService verdictService;
 
-    public ProblemService(ProblemRepository problemRepository, TestCaseRepository testCaseRepository) {
+    public ProblemService(ProblemRepository problemRepository,
+                          TestCaseRepository testCaseRepository,
+                          VerdictService verdictService) {
         this.problemRepository = problemRepository;
         this.testCaseRepository = testCaseRepository;
+        this.verdictService = verdictService;
     }
 
-    /**
-     * Cria um novo problema.
-     */
+
     public Problem create(Problem problem) {
         return problemRepository.save(problem);
     }
 
-    /**
-     * Busca problema por ID. Lança exceção se não encontrado.
-     * ✅ CORRIGIDO: mensagem de erro era "Submissão não encontrada" (cópia/cola errada).
-     */
     public Problem findById(UUID id) {
         return problemRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Problema não encontrado: " + id));
     }
 
-    /**
-     * Atualiza um problema existente.
-     * ✅ CORRIGIDO: update agora retorna o objeto salvo.
-     * ✅ CORRIGIDO: createdAt não deve ser atualizado (data de criação é imutável).
-     */
+
     public Problem update(UUID id, Problem updates) {
         Problem existing = findById(id);
 
@@ -57,7 +49,7 @@ public class ProblemService {
         existing.setTimeLimitMs(updates.getTimeLimitMs());
         existing.setIsPublic(updates.getIsPublic());
 
-        // ✅ Autor pode ser transferido (ex: admin reatribuindo)
+    
         if (updates.getAuthor() != null) {
             existing.setAuthor(updates.getAuthor());
         }
@@ -65,12 +57,11 @@ public class ProblemService {
         return problemRepository.save(existing);
     }
 
-    /**
-     * Remove um problema pelo ID.
-     */
+
     @Transactional
     public void delete(UUID id) {
         Problem existing = findById(id);
+        verdictService.deleteByProblem(existing);
         testCaseRepository.deleteByProblem(existing);
         problemRepository.delete(existing);
     }

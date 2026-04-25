@@ -6,6 +6,7 @@ import br.lab.testesubmissao.Dto.problem.UpdateProblemRequest;
 import br.lab.testesubmissao.Entity.Difficulty;
 import br.lab.testesubmissao.Entity.Problem;
 import br.lab.testesubmissao.Entity.User;
+import br.lab.testesubmissao.Service.AuditLogService;
 import br.lab.testesubmissao.Service.ProblemService;
 import br.lab.testesubmissao.Service.ProblemTagService;
 import br.lab.testesubmissao.Service.UserService;
@@ -40,13 +41,16 @@ public class ProblemController {
     private final ProblemService problemService;
     private final ProblemTagService problemTagService;
     private final UserService userService;
+    private final AuditLogService auditLogService;
 
     public ProblemController(ProblemService problemService,
                              ProblemTagService problemTagService,
-                             UserService userService) {
+                             UserService userService,
+                             AuditLogService auditLogService) {
         this.problemService = problemService;
         this.problemTagService = problemTagService;
         this.userService = userService;
+        this.auditLogService = auditLogService;
     }
 
     // -------------------------------------------------------------------------
@@ -139,6 +143,9 @@ public class ProblemController {
             problemTagService.setTags(saved, request.tags());
         }
 
+        auditLogService.logAdminAction(authentication.getName(), "problem_created", "problem", saved.getId().toString(),
+                "title=" + saved.getTitle());
+
         return ResponseEntity.status(HttpStatus.CREATED).body(
                 ProblemResponse.fromEntity(saved, problemTagService.getTagsOfProblem(saved))
         );
@@ -151,7 +158,8 @@ public class ProblemController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ProblemResponse> update(
             @PathVariable UUID id,
-            @Valid @RequestBody UpdateProblemRequest request
+            @Valid @RequestBody UpdateProblemRequest request,
+            Authentication authentication
     ) {
         Problem updates = new Problem();
         updates.setTitle(request.title());
@@ -167,6 +175,9 @@ public class ProblemController {
             problemTagService.setTags(updated, request.tags());
         }
 
+        auditLogService.logAdminAction(authentication.getName(), "problem_updated", "problem", updated.getId().toString(),
+                "title=" + updated.getTitle());
+
         return ResponseEntity.ok(
                 ProblemResponse.fromEntity(updated, problemTagService.getTagsOfProblem(updated))
         );
@@ -179,10 +190,13 @@ public class ProblemController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ProblemResponse> updateTags(
             @PathVariable UUID id,
-            @RequestBody List<String> tagNames
+            @RequestBody List<String> tagNames,
+            Authentication authentication
     ) {
         Problem problem = problemService.findById(id);
         problemTagService.setTags(problem, tagNames);
+        auditLogService.logAdminAction(authentication.getName(), "problem_tags_updated", "problem", problem.getId().toString(),
+                "tagCount=" + (tagNames == null ? 0 : tagNames.size()));
         return ResponseEntity.ok(
                 ProblemResponse.fromEntity(problem, problemTagService.getTagsOfProblem(problem))
         );
@@ -193,11 +207,12 @@ public class ProblemController {
     // -------------------------------------------------------------------------
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Void> delete(@PathVariable UUID id) {
+    public ResponseEntity<Void> delete(@PathVariable UUID id, Authentication authentication) {
         // Limpa tags e test cases antes de deletar (evita violação de FK)
         Problem problem = problemService.findById(id);
         problemTagService.removeAllTagsFromProblem(problem);
         problemService.delete(id);
+        auditLogService.logAdminAction(authentication.getName(), "problem_deleted", "problem", id.toString(), "manual_delete");
         return ResponseEntity.noContent().build();
     }
 }

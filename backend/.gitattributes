@@ -1,0 +1,31 @@
+# Normaliza todas as quebras de linha para LF no repositório
+* text=auto eol=lf
+
+# Java
+*.java text eol=lf
+*.xml text eol=lf
+*.properties text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+*.sql text eol=lf
+*.md text eol=lf
+*.json text eol=lf
+*.html text eol=lf
+*.css text eol=lf
+*.ts text eol=lf
+*.tsx text eol=lf
+
+# Scripts shell — obrigatoriamente LF (quebra se CRLF)
+*.sh text eol=lf
+mvnw text eol=lf
+
+# Binários — não mexe nas quebras de linha
+*.jar binary
+*.class binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.svg binary
+*.pdf binary

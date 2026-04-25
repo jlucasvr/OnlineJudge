@@ -1,17 +1,21 @@
 package br.lab.testesubmissao.Controller;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.util.StringUtils;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 
 @Controller
 public class FrontendRedirectController {
 
-    @Value("${frontend.url:http://localhost:5173}")
+    @Value("${frontend.url:}")
     private String frontURL;
 
     @GetMapping("/")
     public String redirectToFront(){
-        return "redirect:" + frontURL;
+        if (StringUtils.hasText(frontURL)) {
+            return "redirect:" + frontURL;
+        }
+        return "redirect:/swagger-ui/index.html";
     }
 }

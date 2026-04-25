@@ -47,6 +47,7 @@ public class SecurityConfig {
 
                         
                         .requestMatchers("/auth/register", "/auth/login").permitAll()
+                        .requestMatchers("/actuator/health", "/actuator/health/**", "/actuator/info").permitAll()
 
                      
                         .requestMatchers(HttpMethod.GET, "/problems/**").permitAll()

@@ -4,6 +4,7 @@ import br.lab.testesubmissao.Dto.user.AdminUpdateUserRequest;
 import br.lab.testesubmissao.Dto.user.UpdateMeRequest;
 import br.lab.testesubmissao.Dto.user.UserResponse;
 import br.lab.testesubmissao.Entity.User;
+import br.lab.testesubmissao.Service.AuditLogService;
 import br.lab.testesubmissao.Service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -34,9 +35,11 @@ import java.util.UUID;
 public class UserController {
 
     private final UserService userService;
+    private final AuditLogService auditLogService;
 
-    public UserController(UserService userService) {
+    public UserController(UserService userService, AuditLogService auditLogService) {
         this.userService = userService;
+        this.auditLogService = auditLogService;
     }
 
     // -------------------------------------------------------------------------
@@ -69,6 +72,8 @@ public class UserController {
         // role = null → service não altera a role
 
         User updated = userService.update(current.getId(), updates);
+        auditLogService.logUserAction(authentication.getName(), "user_self_updated", "user", updated.getId().toString(),
+                "self_service");
         return ResponseEntity.ok(UserResponse.fromEntity(updated));
     }
 
@@ -76,7 +81,7 @@ public class UserController {
     // GET /users  →  lista todos os usuários (ADMIN)
     // -------------------------------------------------------------------------
     @GetMapping
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<UserResponse>> listAll() {
         List<UserResponse> response = userService.listAll().stream()
                 .map(UserResponse::fromEntity)
@@ -88,7 +93,7 @@ public class UserController {
     // GET /users/{id}  →  detalhe de um usuário (ADMIN)
     // -------------------------------------------------------------------------
     @GetMapping("/{id}")
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<UserResponse> findById(@PathVariable UUID id) {
         return ResponseEntity.ok(UserResponse.fromEntity(userService.findById(id)));
     }
@@ -97,10 +102,11 @@ public class UserController {
     // PUT /users/{id}  →  ADMIN atualiza qualquer campo, inclusive role
     // -------------------------------------------------------------------------
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<UserResponse> adminUpdate(
             @PathVariable UUID id,
-            @Valid @RequestBody AdminUpdateUserRequest request
+            @Valid @RequestBody AdminUpdateUserRequest request,
+            Authentication authentication
     ) {
         User updates = new User();
         updates.setUsername(request.username());
@@ -108,6 +114,8 @@ public class UserController {
         updates.setRole(request.role()); // pode ser null → service não altera
 
         User updated = userService.update(id, updates);
+        auditLogService.logAdminAction(authentication.getName(), "user_admin_updated", "user", updated.getId().toString(),
+                "role=" + updated.getRole());
         return ResponseEntity.ok(UserResponse.fromEntity(updated));
     }
 
@@ -116,8 +124,9 @@ public class UserController {
     // -------------------------------------------------------------------------
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Void> delete(@PathVariable UUID id) {
+    public ResponseEntity<Void> delete(@PathVariable UUID id, Authentication authentication) {
         userService.delete(id);
+        auditLogService.logAdminAction(authentication.getName(), "user_deleted", "user", id.toString(), "manual_delete");
         return ResponseEntity.noContent().build();
     }
 }

@@ -13,7 +13,8 @@ public record VerdictResponse(
         String result,
         Integer executionTimeMs,
         Integer memoryUsedKb,
-        String checkerOutput
+        String checkerOutput,
+        String actualOutput
 ) {
     public static VerdictResponse fromEntity(Verdict verdict) {
         return new VerdictResponse(
@@ -25,7 +26,8 @@ public record VerdictResponse(
                 verdict.getResult(),
                 verdict.getExecutionTimeMs(),
                 verdict.getMemoryUsedKb(),
-                verdict.getCheckerOutput()
+                verdict.getCheckerOutput(),
+                verdict.getActualOutput()
         );
     }
 }

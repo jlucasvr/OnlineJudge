@@ -1,5 +1,7 @@
 package br.lab.testesubmissao.Exception;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
@@ -15,6 +17,8 @@ import java.util.Map;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<ApiError> handleNotFound(ResourceNotFoundException ex) {
@@ -36,6 +40,12 @@ public class GlobalExceptionHandler {
         return build(HttpStatus.FORBIDDEN, "Acesso negado", null);
     }
 
+    @ExceptionHandler(SubmissionDispatchException.class)
+    public ResponseEntity<ApiError> handleSubmissionDispatch(SubmissionDispatchException ex) {
+        Map<String, String> details = Map.of("submissionId", ex.getSubmissionId().toString());
+        return build(HttpStatus.SERVICE_UNAVAILABLE, ex.getMessage(), details);
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiError> handleValidation(MethodArgumentNotValidException ex) {
         Map<String, String> details = new LinkedHashMap<>();
@@ -47,6 +57,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiError> handleGeneric(Exception ex) {
+        log.error("Erro interno não tratado.", ex);
         return build(HttpStatus.INTERNAL_SERVER_ERROR, "Unexpected internal error", null);
     }
 

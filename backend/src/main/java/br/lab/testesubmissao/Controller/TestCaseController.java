@@ -5,12 +5,14 @@ import br.lab.testesubmissao.Dto.testcase.TestCaseResponse;
 import br.lab.testesubmissao.Dto.testcase.UpdateTestCaseRequest;
 import br.lab.testesubmissao.Entity.Problem;
 import br.lab.testesubmissao.Entity.TestCase;
+import br.lab.testesubmissao.Service.AuditLogService;
 import br.lab.testesubmissao.Service.ProblemService;
 import br.lab.testesubmissao.Service.TestCaseService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -37,10 +39,14 @@ public class TestCaseController {
 
     private final TestCaseService testCaseService;
     private final ProblemService problemService;
+    private final AuditLogService auditLogService;
 
-    public TestCaseController(TestCaseService testCaseService, ProblemService problemService) {
+    public TestCaseController(TestCaseService testCaseService,
+                              ProblemService problemService,
+                              AuditLogService auditLogService) {
         this.testCaseService = testCaseService;
         this.problemService = problemService;
+        this.auditLogService = auditLogService;
     }
 
     // -------------------------------------------------------------------------
@@ -89,7 +95,8 @@ public class TestCaseController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<TestCaseResponse> create(
             @PathVariable UUID problemId,
-            @Valid @RequestBody CreateTestCaseRequest request
+            @Valid @RequestBody CreateTestCaseRequest request,
+            Authentication authentication
     ) {
         Problem problem = problemService.findById(problemId);
 
@@ -102,6 +109,8 @@ public class TestCaseController {
         testCase.setIsSample(request.isSample() != null ? request.isSample() : false);
 
         TestCase saved = testCaseService.create(testCase);
+        auditLogService.logAdminAction(authentication.getName(), "test_case_created", "test_case", saved.getId().toString(),
+                "problemId=" + problemId + " orderIndex=" + saved.getOrderIndex());
         return ResponseEntity.status(HttpStatus.CREATED).body(TestCaseResponse.fromEntity(saved));
     }
 
@@ -113,7 +122,8 @@ public class TestCaseController {
     public ResponseEntity<TestCaseResponse> update(
             @PathVariable UUID problemId,
             @PathVariable UUID id,
-            @Valid @RequestBody UpdateTestCaseRequest request
+            @Valid @RequestBody UpdateTestCaseRequest request,
+            Authentication authentication
     ) {
         // Valida que o problema existe
         problemService.findById(problemId);
@@ -126,6 +136,8 @@ public class TestCaseController {
         updates.setIsSample(request.isSample());
 
         TestCase updated = testCaseService.update(id, updates);
+        auditLogService.logAdminAction(authentication.getName(), "test_case_updated", "test_case", updated.getId().toString(),
+                "problemId=" + problemId + " orderIndex=" + updated.getOrderIndex());
         return ResponseEntity.ok(TestCaseResponse.fromEntity(updated));
     }
 
@@ -136,10 +148,13 @@ public class TestCaseController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> delete(
             @PathVariable UUID problemId,
-            @PathVariable UUID id
+            @PathVariable UUID id,
+            Authentication authentication
     ) {
         problemService.findById(problemId);
         testCaseService.delete(id);
+        auditLogService.logAdminAction(authentication.getName(), "test_case_deleted", "test_case", id.toString(),
+                "problemId=" + problemId);
         return ResponseEntity.noContent().build();
     }
 
@@ -148,9 +163,11 @@ public class TestCaseController {
     // -------------------------------------------------------------------------
     @DeleteMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Void> deleteAll(@PathVariable UUID problemId) {
+    public ResponseEntity<Void> deleteAll(@PathVariable UUID problemId, Authentication authentication) {
         Problem problem = problemService.findById(problemId);
         testCaseService.deleteByProblem(problem);
+        auditLogService.logAdminAction(authentication.getName(), "test_case_deleted_all", "problem", problemId.toString(),
+                "bulk_delete");
         return ResponseEntity.noContent().build();
     }
 }
