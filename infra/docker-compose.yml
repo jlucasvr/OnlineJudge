@@ -1,0 +1,166 @@
+# =============================================================================
+# Online Judge — Infraestrutura completa
+#
+# Diretório compartilhado "OJ_HOST_DATA_ROOT":
+#   Montado em /data tanto na API quanto no Worker.
+#   O Worker também usa esse caminho do host para montar apenas o diretório
+#   efêmero da submissão nos containers de sandbox.
+#   Estrutura:
+#     /data/submissions/{year}/{month}/{uuid}.c   ← código salvo pela API
+#     /data/testcases/{problemId}/inputs/{n}      ← inputs (gerenciados pelo admin)
+#     /data/testcases/{problemId}/outputs/{n}     ← outputs esperados
+#     /data/compile-errors/{submissionId}.txt     ← erros de compilação
+#     /data/temp/exec/{submissionId}/             ← execução temporária (limpo após julgar)
+# =============================================================================
+
+services:
+
+  # ---------------------------------------------------------------------------
+  # PostgreSQL
+  # ---------------------------------------------------------------------------
+  postgres:
+    image: postgres:16-alpine
+    container_name: oj-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: onlinejudge
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d onlinejudge"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ---------------------------------------------------------------------------
+  # RabbitMQ
+  # ---------------------------------------------------------------------------
+  rabbitmq:
+    image: rabbitmq:3.13-management-alpine
+    container_name: oj-rabbitmq
+    restart: unless-stopped
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USERNAME:-guest}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-guest}
+    ports:
+      - "5672:5672"    # AMQP
+      - "15672:15672"  # Management UI → http://localhost:15672
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ---------------------------------------------------------------------------
+  # API (Spring Boot)
+  # ---------------------------------------------------------------------------
+  api:
+    build:
+      context: ../backend
+      dockerfile: Dockerfile
+    container_name: oj-api
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/onlinejudge
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRATION_MS: 86400000
+      FRONTEND_URL: ${FRONTEND_URL:-}
+      APP_CORS_ALLOWED_ORIGINS: ${APP_CORS_ALLOWED_ORIGINS:-http://localhost:5173}
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USERNAME: ${RABBITMQ_USERNAME:-guest}
+      RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-guest}
+      WORKER_API_PASSWORD: ${WORKER_API_PASSWORD}
+      OJ_DATA_ROOT: /data
+    volumes:
+      - ${OJ_HOST_DATA_ROOT:-/tmp/onlinejudge-data}:/data
+    ports:
+      - "8081:8081"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8081/actuator/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+
+  # ---------------------------------------------------------------------------
+  # Worker (Python)
+  # ---------------------------------------------------------------------------
+  worker:
+    build:
+      context: ../worker
+      dockerfile: Dockerfile
+    container_name: oj-worker
+    restart: unless-stopped
+    depends_on:
+      api:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    environment:
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USERNAME: ${RABBITMQ_USERNAME:-guest}
+      RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-guest}
+      API_BASE_URL: http://api:8081
+      # Conta de serviço do Worker (deve existir no banco com ROLE_ADMIN)
+      WORKER_API_USERNAME: ${WORKER_API_USERNAME:-worker}
+      WORKER_API_PASSWORD: ${WORKER_API_PASSWORD}
+      OJ_DATA_ROOT: /data
+      OJ_DOCKER_HOST_DATA_ROOT: ${OJ_DOCKER_HOST_DATA_ROOT:-/tmp/onlinejudge-data}
+      OJ_SANDBOX_IMAGE_C: oj-sandbox-c:latest
+      OJ_SANDBOX_IMAGE_CPP: oj-sandbox-cpp:latest
+      OJ_SANDBOX_IMAGE_PYTHON: oj-sandbox-python:latest
+      OJ_SANDBOX_IMAGE_JAVA: oj-sandbox-java:latest
+    volumes:
+      - ${OJ_HOST_DATA_ROOT:-/tmp/onlinejudge-data}:/data
+      - /var/run/docker.sock:/var/run/docker.sock
+    # Sem port — o worker não expõe endpoints públicos
+
+  # ---------------------------------------------------------------------------
+  # Imagens de sandbox por linguagem (build-only)
+  # ---------------------------------------------------------------------------
+  sandbox-python:
+    build:
+      context: ../worker/sandbox-images/python
+      dockerfile: Dockerfile
+    image: oj-sandbox-python:latest
+    profiles: ["sandbox-images"]
+
+  sandbox-c:
+    build:
+      context: ../worker/sandbox-images/c
+      dockerfile: Dockerfile
+    image: oj-sandbox-c:latest
+    profiles: ["sandbox-images"]
+
+  sandbox-cpp:
+    build:
+      context: ../worker/sandbox-images/cpp
+      dockerfile: Dockerfile
+    image: oj-sandbox-cpp:latest
+    profiles: ["sandbox-images"]
+
+  sandbox-java:
+    build:
+      context: ../worker/sandbox-images/java
+      dockerfile: Dockerfile
+    image: oj-sandbox-java:latest
+    profiles: ["sandbox-images"]
+
+# =============================================================================
+# Volumes
+# =============================================================================
+volumes:
+  postgres-data:
